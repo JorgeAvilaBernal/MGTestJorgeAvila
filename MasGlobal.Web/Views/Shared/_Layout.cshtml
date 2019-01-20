@@ -1,0 +1,85 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+</head>
+<body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                @Html.ActionLink("Application name", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+            </div>
+            <div class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li>@Html.ActionLink("Home", "Index", "Home", new { area = "" }, null)</li>
+                    <li>@Html.ActionLink("API", "Index", "Help", new { area = "" }, null)</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="container body-content">
+        @RenderBody()
+        <hr />
+        <footer>
+            <p>&copy; @DateTime.Now.Year - My ASP.NET Application</p>
+        </footer>
+    </div>
+
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    @RenderSection("scripts", required: false)
+
+    <script type="text/javascript">
+        var formatter = new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2
+        });
+        $(document).ready(function () {
+            searchEmployees();
+        });
+
+        function searchEmployees() {
+            var url = "/api/employees";
+            var id = $("#txtSearch").val();
+            if (typeof (id) != "undefined" && id != null && id != "")
+                url += "/" + id;
+            $.get(url)
+                .done(function (data) { populateTable(data); })
+                .fail(function (er) { alert("Error procesing the search, please be sure to provide a correct id, it must be a numeric value"); });
+        }
+
+        function populateTable(data) {
+            try {
+                $("#resultsTable tr.dynamic").remove();
+                var parsedData = JSON.parse(data);
+                if (!parsedData.Error) {
+                    $.each(parsedData.Employees, function (i, element) {
+                        $("#resultsTable").append($('<tr class="dynamic">')
+                            .append($('<td>').append(element.Id))
+                            .append($('<td>').append(element.Name))
+                            .append($('<td>').append(element.ContractTypeName))
+                            .append($('<td>').append(element.RoleName))
+                            .append($('<td>').append(formatter.format(element.HourlySalary)))
+                            .append($('<td>').append(formatter.format(element.MonthlySalary)))
+                            .append($('<td>').append(formatter.format(element.YearlySalary))))
+                    });
+                } else
+                    alert(parsedData.Message);
+            } catch (ex) {
+                alert("Error rendering the data." + ex);
+            }
+        }
+    </script>
+
+</body>
+</html>
